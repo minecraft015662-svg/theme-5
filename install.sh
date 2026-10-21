@@ -20,10 +20,36 @@ banner(){
 
 # verify_license LICENSE EMAIL DOMAIN -> asks the license server; prints reason on failure
 verify_license(){
-  local body res
-  body=$(python3 -c 'import json,sys;print(json.dumps({"license":sys.argv[1],"email":sys.argv[2],"domain":sys.argv[3]}))' "$1" "$2" "$3")
-  res=$(curl -fsS -m 15 -X POST -H 'Content-Type: application/json' -d "$body" "$RAW/api/verify" 2>/dev/null) || { echo "cannot reach license server $RAW"; return 1; }
-  python3 -c 'import json,sys;d=json.loads(sys.argv[1]);print("ok:"+d.get("plan","standard") if d.get("ok") else d.get("reason","license rejected"));sys.exit(0 if d.get("ok") else 1)' "$res"
+  local body out code json
+  case "$RAW" in ''|*__SERVER__*)
+    echo "no license server URL in this install.sh - download it from your own server (curl -sSL https://YOUR-SERVER/install.sh | sudo bash), not from GitHub"
+    return 1;;
+  esac
+  body=$(python3 -c 'import json,sys;print(json.dumps({"license":sys.argv[1],"email":sys.argv[2],"domain":sys.argv[3]}))' "$1" "$2" "$3") \
+    || { echo "could not build the verify request (python3 problem)"; return 1; }
+  # no -f: we capture the HTTP status ourselves so a 3xx/4xx/5xx never becomes a bare python traceback
+  # -L follows redirects (http->https); --post301/302 keeps POST instead of degrading to GET
+  out=$(curl -sSL --post301 --post302 -m 20 -X POST -H 'Content-Type: application/json' -d "$body" -w $'\n%{http_code}' "$RAW/api/verify" 2>/dev/null)
+  code=${out##*$'\n'}; json=${out%$'\n'*}
+  if [ -z "$code" ] || [ "$code" = "000" ]; then
+    echo "cannot reach license server $RAW - check the URL and that the server is running"
+    return 1
+  fi
+  if [ "$code" != "200" ]; then
+    echo "license server $RAW answered HTTP $code - check PUBLIC_URL on the server"
+    return 1
+  fi
+  if [ -z "${json// }" ]; then
+    echo "license server $RAW returned an empty response - check PUBLIC_URL on the server"
+    return 1
+  fi
+  python3 -c 'import json,sys
+t=sys.argv[1]
+try: d=json.loads(t)
+except Exception: sys.stdout.write("license server sent non-JSON: "+t.strip()[:160].replace("\n"," ")); sys.exit(1)
+if not isinstance(d,dict): sys.stdout.write("unexpected reply from license server: "+t.strip()[:160].replace("\n"," ")); sys.exit(1)
+if d.get("ok"): sys.stdout.write("ok:"+str(d.get("plan","standard"))); sys.exit(0)
+sys.stdout.write(str(d.get("reason") or "license rejected")); sys.exit(1)' "$json"
 }
 
 dl(){ curl -fsSL "$RAW/$1" -o "$2"; }

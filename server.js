@@ -1,10 +1,35 @@
 'use strict';
 // Sarthak34 all-in-one: admin website + license API + install.sh + theme packages. No dependencies.
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto');
-const PORT = +process.env.PORT || 3434, USER = process.env.ADMIN_USER || 'admin', PASS = process.env.ADMIN_PASS;
-const PUB = (process.env.PUBLIC_URL || '').replace(/\/+$/, '');
-if (!PASS || PASS.length < 8) { console.error('Set ADMIN_PASS (min 8 chars)'); process.exit(1); }
-if (!/^https?:\/\//.test(PUB)) { console.error('Set PUBLIC_URL, e.g. https://license.example.com'); process.exit(1); }
+// Load .env (and .env.local) without any dependency.
+(function loadEnv() {
+  for (const f of ['.env.local', '.env']) {
+    let s; try { s = fs.readFileSync(path.join(__dirname, f), 'utf8'); } catch (e) { continue; }
+    for (const line of s.split(/\r?\n/)) {
+      const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
+      if (!m) continue;
+      let v = m[2].trim();
+      if ((v[0] === '"' && v[v.length - 1] === '"') || (v[0] === "'" && v[v.length - 1] === "'")) v = v.slice(1, -1);
+      if (!(m[1] in process.env)) process.env[m[1]] = v;
+    }
+  }
+})();
+
+const PORT = +process.env.PORT || 3434, USER = process.env.ADMIN_USER || 'admin';
+const PROD = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+let PASS = process.env.ADMIN_PASS;
+let PUB = (process.env.PUBLIC_URL || '').replace(/\/+$/, '');
+
+if (!PASS || PASS.length < 8) {
+  if (PROD) { console.error('Set ADMIN_PASS (min 8 chars)'); process.exit(1); }
+  PASS = crypto.randomBytes(18).toString('base64url');
+  console.warn('[dev] ADMIN_PASS not set \u2014 generated one for this run: ' + PASS);
+}
+if (!/^https?:\/\//.test(PUB)) {
+  if (PROD) { console.error('Set PUBLIC_URL, e.g. https://license.example.com'); process.exit(1); }
+  PUB = 'http://localhost:' + PORT;
+  console.warn('[dev] PUBLIC_URL not set \u2014 using ' + PUB);
+}
 const ROOT = __dirname, DB = path.join(process.env.DATA_DIR || path.join(ROOT, 'data'), 'licenses.json');
 fs.mkdirSync(path.dirname(DB), { recursive: true });
 let lic = []; try { lic = JSON.parse(fs.readFileSync(DB, 'utf8')); } catch (e) {}
