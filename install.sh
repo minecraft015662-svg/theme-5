@@ -4,6 +4,7 @@ set -uo pipefail
 RAW="${S34_RAW:-__SERVER__}"
 PANEL="${PANEL_DIR:-/var/www/pterodactyl}"
 CONF=/etc/sarthak34/license.conf
+SERVER_FILE=/etc/sarthak34/server.url
 WRAP="$PANEL/resources/views/templates/wrapper.blade.php"
 TDIR="$PANEL/public/themes/sarthak34"
 BIN=/usr/local/bin/sarthak34
@@ -16,6 +17,58 @@ banner(){
   echo ' ___) |  _  |/ ___ \| |_| | |_| |\ V  V /  '
   echo '|____/|_| |_/_/   \_\____/ \___/  \_/\_/   '
   printf '\033[0m   Shadow Theme for Pterodactyl\n\n'
+}
+
+# ask VAR "prompt" - read a line from the user. stdin when it is a real terminal,
+# otherwise /dev/tty (needed for `curl | sudo bash`, where stdin is the script).
+ask(){
+  local __val=''
+  if [ -t 0 ]; then
+    read -rp "$2" __val || return 1
+  elif { : </dev/tty; } 2>/dev/null; then
+    read -rp "$2" __val </dev/tty || return 1
+  else
+    return 1
+  fi
+  printf -v "$1" '%s' "$__val"
+}
+
+# resolve_raw - install.sh copied from GitHub keeps the literal __SERVER__ placeholder.
+# Ask once for the license server PUBLIC_URL, sanity-check it, then remember it.
+resolve_raw(){
+  case "$RAW" in ''|*__SERVER__*) ;; *) return 0;; esac
+  if [ -f "$SERVER_FILE" ]; then
+    local saved; saved=$(head -n1 "$SERVER_FILE" 2>/dev/null | tr -d '[:space:]')
+    case "$saved" in ''|*__SERVER__*) ;; *)
+      RAW=$saved; echo "License server: $RAW"; return 0;;
+    esac
+  fi
+  echo "This install.sh has no license server URL yet."
+  echo "Enter the PUBLIC_URL of your license server (the host where the admin panel runs)."
+  local u='' probe
+  while :; do
+    if ! ask u "License server URL: "; then
+      echo
+      die "no terminal to ask on - rerun as: S34_RAW=https://your-server sudo -E bash install.sh"
+    fi
+    u=${u%/}
+    case "$u" in
+      http://*|https://*) ;;
+      *) echo "  Type a URL starting with http:// or https://"; continue;;
+    esac
+    probe=$(curl -sSL -m 15 -o /dev/null -w '%{http_code}' "$u/install.sh" 2>/dev/null) || probe=000
+    if [ "$probe" != "200" ]; then
+      echo "  Cannot reach $u/install.sh (HTTP $probe) - check the URL and that the server is running."
+      continue
+    fi
+    break
+  done
+  RAW=$u
+  if mkdir -p "$(dirname "$SERVER_FILE")" 2>/dev/null && printf '%s\n' "$RAW" > "$SERVER_FILE" 2>/dev/null; then
+    echo "Saved to $SERVER_FILE"
+  else
+    echo "Could not save to $SERVER_FILE - you will be asked again next time."
+  fi
 }
 
 # verify_license LICENSE EMAIL DOMAIN -> asks the license server; prints reason on failure
@@ -74,12 +127,17 @@ PY
 
 load_conf(){ LIC=""; EMAIL=""; [ -f "$CONF" ] && . "$CONF"; return 0; }
 ask_license(){
-  read -rp "License key: " LIC </dev/tty; read -rp "Email: " EMAIL </dev/tty
+  resolve_raw
+  ask LIC "License key: " || die "no terminal to read the license key - run this from an interactive shell"
+  ask EMAIL "Email: " || die "no terminal to read the email - run this from an interactive shell"
+  [ -n "$LIC" ] || die "license key is empty"
+  [ -n "$EMAIL" ] || die "email is empty"
   local m; m=$(verify_license "$LIC" "$EMAIL" "$DOMAIN") || die "$m"
   mkdir -p /etc/sarthak34; (umask 077; printf 'LIC=%q\nEMAIL=%q\n' "$LIC" "$EMAIL" > "$CONF"); chmod 600 "$CONF"
   echo "License verified for $DOMAIN (${m#ok:} plan)."
 }
 need_license(){
+  resolve_raw
   load_conf; [ -n "$LIC" ] || ask_license
   local m; m=$(verify_license "$LIC" "$EMAIL" "$DOMAIN") || die "$m"
 }
@@ -130,19 +188,19 @@ cmd_menu(){
     echo "  7) Uninstall theme"
     echo "  0) Exit"
     echo
-    read -rp "  Choose: " c </dev/tty
+    ask c "  Choose: " || exit 0
     case "$c" in
       1) ( cmd_install );;
       2) ( cmd_update );;
       3) ( cmd_ext list );;
-      4) read -rp "  Extension name: " n </dev/tty; ( cmd_ext install "$n" );;
-      5) read -rp "  Extension name: " n </dev/tty; ( cmd_ext remove "$n" );;
+      4) ask n "  Extension name: " || exit 0; ( cmd_ext install "$n" );;
+      5) ask n "  Extension name: " || exit 0; ( cmd_ext remove "$n" );;
       6) ( cmd_status );;
       7) ( cmd_uninstall );;
       0) exit 0;;
       *) echo "  Invalid choice";;
     esac
-    echo; read -rp "  Press Enter to continue..." </dev/tty
+    echo; ask _p "  Press Enter to continue... " || true
   done
 }
 
