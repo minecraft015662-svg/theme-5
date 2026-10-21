@@ -1,0 +1,4 @@
+#s34-links{position:fixed;right:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:20}
+#s34-links a{display:block;padding:8px 12px;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;color:#e8eaff;background:rgba(21,26,51,.85);border:1px solid rgba(143,123,255,.25)}
+#s34-links a:hover{border-color:#8f7bff;color:#fff}
+@media(max-width:900px){#s34-links{display:none}}

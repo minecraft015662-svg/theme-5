@@ -1,0 +1,8 @@
+{"extensions":[
+ {"name":"announcement-bar","description":"Dismissible announcement banner at the top of the panel","files":["ext.css","ext.js"]},
+ {"name":"footer-brand","description":"Small 'Shadow Theme by Sarthak34' credit","files":["ext.css","ext.js"]},
+ {"name":"console-glow","description":"Soft violet glow around the server console","files":["ext.css"]},
+ {"name":"accent-picker","description":"Users pick their own accent colour","files":["ext.css","ext.js"]},
+ {"name":"quick-links","description":"Side dock with Discord, billing and support links","files":["ext.css","ext.js"]},
+ {"name":"login-aurora","description":"Animated aurora background on the login page","files":["ext.css"]}
+]}
