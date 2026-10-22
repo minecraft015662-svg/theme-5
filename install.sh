@@ -112,6 +112,7 @@ rebuild(){
   python3 - "$WRAP" "$TDIR" <<'PY'
 import os, re, sys, time
 wrap, tdir = sys.argv[1], sys.argv[2]; v = int(time.time()); tags = []
+if os.path.exists(f"{tdir}/server.js"): tags.append(f'<script src="/themes/sarthak34/server.js?v={v}"></script>')
 if os.path.exists(f"{tdir}/theme.css"): tags.append(f'<link rel="stylesheet" href="/themes/sarthak34/theme.css?v={v}">')
 ext = f"{tdir}/ext"
 for n in (sorted(os.listdir(ext)) if os.path.isdir(ext) else []):
@@ -143,7 +144,7 @@ need_license(){
 }
 valid_name(){ [[ "$1" =~ ^[A-Za-z0-9._-]+$ ]]; }
 
-get_theme(){ mkdir -p "$TDIR"; dl packages/theme/theme.css "$TDIR/theme.css" || die "could not download the theme from $RAW"; }
+get_theme(){ mkdir -p "$TDIR"; dl packages/theme/theme.css "$TDIR/theme.css" || die "could not download the theme from $RAW"; printf 'window.__S34_SERVER="%s";\n' "${RAW//\"/}" > "$TDIR/server.js"; }
 get_ext(){
   valid_name "$1" || die "bad extension name"
   local files f; files=$(curl -fsSL "$RAW/packages/index.json" | python3 -c 'import json,sys;n=sys.argv[1];[print(f) for e in json.load(sys.stdin)["extensions"] if e["name"]==n for f in e["files"]]' "$1") || die "cannot read extension list"
@@ -157,7 +158,7 @@ cmd_install(){
   ask_license
   curl -fsSL "$RAW/install.sh" -o "$BIN" && chmod +x "$BIN"
   get_theme
-  for e in login-aurora accent-picker footer-brand; do get_ext "$e"; done
+  for e in login-aurora accent-picker footer-brand theme-sync; do get_ext "$e"; done
   rebuild
   echo "Shadow Theme installed. Hard refresh your browser (Ctrl+Shift+R)."
   echo "Extensions: sarthak34 ext list | sarthak34 ext install <name>"

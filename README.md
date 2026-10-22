@@ -25,3 +25,11 @@ Add a free UptimeRobot HTTP monitor (5 min) so Render does not sleep. Accept 401
   - `wings`  = run the official Wings (node daemon) installer
   - `cloudflare` = install cloudflared + create an auto-named tunnel (`shadow-panel`) for your panel domain
 - Edit LINKS in quick-links/ext.js and TEXT in announcement-bar/ext.js before using them.
+
+## Shadow Editor (live theming)
+- The admin site has a **Shadow Editor** (sidebar -> Shadow Editor): set the logo (URL or upload),
+  server name, Discord link text + invite, accent colours, announcement bar and footer, with a live preview.
+- Save and the settings go live on every installed panel right away - they are served from
+  `GET /api/theme-config` and applied by the **theme-sync** extension (installed by default).
+- Settings persist in `data/theme.json` (and Upstash Redis when configured), so they survive redeploys.
+- The editor needs `theme-sync` on the panel; `install.sh` bakes your PUBLIC_URL into it so it knows where to fetch from.
