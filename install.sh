@@ -176,27 +176,156 @@ cmd_uninstall(){ rm -rf "$TDIR"; rebuild; echo "Theme removed. License file kept
 cmd_status(){ load_conf; echo "Panel: $PANEL ($DOMAIN)"; echo "License: ${LIC:-none}"; echo "Email: ${EMAIL:-none}"
   if [ -d "$TDIR" ]; then echo "Theme: installed"; ls "$TDIR/ext" 2>/dev/null | sed 's/^/Extension: /'; else echo "Theme: not installed"; fi; }
 
+# ---------- interactive pickers (show names, no typing) ----------
+# pick_index VAR "prompt" item... -> sets VAR to the 1-based number chosen
+pick_index(){
+  local __var=$1 __prompt=$2; shift 2
+  local __items=("$@") __i=1 __c='' __n=$#
+  [ "$__n" -gt 0 ] || return 1
+  for __it in "${__items[@]}"; do printf '  %2d) %s\n' "$__i" "$__it"; __i=$((__i+1)); done
+  while :; do
+    ask __c "$__prompt" || return 1
+    if [[ "$__c" =~ ^[0-9]+$ ]] && [ "$__c" -ge 1 ] && [ "$__c" -le "$__n" ]; then
+      printf -v "$__var" '%s' "$__c"; return 0
+    fi
+    echo "  Enter a number from 1 to $__n"
+  done
+}
+
+# pick_ext -> sets EXT to an extension name chosen from the server list
+pick_ext(){
+  resolve_raw
+  local __lines nm desc
+  __lines=$(curl -fsSL "$RAW/packages/index.json" | python3 -c 'import json,sys
+for e in json.load(sys.stdin)["extensions"]: print(e["name"]+"\t"+e["description"])') \
+    || die "cannot read the extension list"
+  [ -n "$__lines" ] || die "no extensions available"
+  local -a names disp
+  while IFS=$'\t' read -r nm desc; do names+=("$nm"); disp+=("$nm  -  $desc"); done <<< "$__lines"
+  local idx
+  pick_index idx "  Extension number: " "${disp[@]}" || return 1
+  EXT="${names[$((idx-1))]}"
+}
+
+# pick_installed_ext -> sets EXT to an installed extension name chosen from disk
+pick_installed_ext(){
+  local -a names; local d
+  for d in "$TDIR"/ext/*/; do [ -d "$d" ] && names+=("$(basename "$d")"); done
+  [ "${#names[@]}" -gt 0 ] || die "no extensions installed yet"
+  local idx
+  pick_index idx "  Extension number: " "${names[@]}" || return 1
+  EXT="${names[$((idx-1))]}"
+}
+
+# ---------- server roles: panel / wings / cloudflare ----------
+cmd_panel(){
+  need_license
+  echo
+  echo "  Install / update the Pterodactyl Panel (official installer)."
+  echo "  Sets up PHP, MariaDB, Redis, Nginx and the panel. You will be"
+  echo "  asked for the panel domain and database details."
+  echo
+  ask _go "  Continue? [y/N] " || return 0
+  case "$_go" in [yY]*) ;; *) echo "  Cancelled."; return 0;; esac
+  local s rc; s=$(mktemp)
+  curl -fsSL https://raw.githubusercontent.com/pterodactyl/panel/develop/install.sh -o "$s" \
+    || { echo "  Could not download the panel installer."; rm -f "$s"; return 1; }
+  bash "$s"; rc=$?; rm -f "$s"
+  if [ "$rc" -eq 0 ]; then echo "  Panel ready. Choose option 1 to apply Shadow Theme to it."
+  else echo "  Panel installer exited with code $rc."; fi
+  return "$rc"
+}
+
+cmd_wings(){
+  echo
+  echo "  Install Wings, the Pterodactyl node daemon (official installer)."
+  echo "  Sets up Docker and registers this machine as a node."
+  echo
+  ask _go "  Continue? [y/N] " || return 0
+  case "$_go" in [yY]*) ;; *) echo "  Cancelled."; return 0;; esac
+  local s rc; s=$(mktemp)
+  curl -fsSL https://raw.githubusercontent.com/pterodactyl/wings/develop/install.sh -o "$s" \
+    || { echo "  Could not download the Wings installer."; rm -f "$s"; return 1; }
+  bash "$s"; rc=$?; rm -f "$s"
+  if [ "$rc" -eq 0 ]; then echo "  Wings installed. Configure it from Admin -> Nodes in the panel."
+  else echo "  Wings installer exited with code $rc."; fi
+  return "$rc"
+}
+
+CF_TUNNEL=shadow-panel
+cmd_cloudflare(){
+  echo
+  echo "  Connect this server to Cloudflare with a Tunnel."
+  echo "  Installs cloudflared and creates a tunnel named '$CF_TUNNEL',"
+  echo "  routing your panel ($DOMAIN) without port forwarding."
+  echo
+  ask _go "  Continue? [y/N] " || return 0
+  case "$_go" in [yY]*) ;; *) echo "  Cancelled."; return 0;; esac
+  if ! command -v cloudflared >/dev/null 2>&1; then
+    echo "  Installing cloudflared..."
+    curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+      -o /usr/local/bin/cloudflared || { echo "  Could not download cloudflared."; return 1; }
+    chmod +x /usr/local/bin/cloudflared
+  fi
+  echo "  Logging in to Cloudflare (a browser window will open)..."
+  cloudflared tunnel login || { echo "  Cloudflare login failed or was cancelled."; return 1; }
+  if ! cloudflared tunnel list 2>/dev/null | grep -qw "$CF_TUNNEL"; then
+    echo "  Creating tunnel '$CF_TUNNEL'..."
+    cloudflared tunnel create "$CF_TUNNEL" || { echo "  Could not create the tunnel."; return 1; }
+  fi
+  local tid; tid=$(cloudflared tunnel list 2>/dev/null | awk -v n="$CF_TUNNEL" 'index($0,n){print $1; exit}')
+  [ -n "$tid" ] || { echo "  Could not read the tunnel id."; return 1; }
+  mkdir -p /root/.cloudflared
+  cat > /root/.cloudflared/config.yml <<EOF
+tunnel: $tid
+credentials-file: /root/.cloudflared/$tid.json
+ingress:
+  - hostname: $DOMAIN
+    service: http://localhost:80
+  - service: http_status:404
+EOF
+  cloudflared tunnel route dns "$CF_TUNNEL" "$DOMAIN" 2>/dev/null
+  cloudflared service install 2>/dev/null
+  echo "  Tunnel '$CF_TUNNEL' configured for $DOMAIN and service installed."
+  echo "  It tunnels to http://localhost:80 - point Nginx there, then:"
+  echo "     systemctl enable --now cloudflared"
+}
+
 cmd_menu(){
   while true; do
-    clear; banner
-    echo "  1) Install / Reinstall theme"
-    echo "  2) Update theme + extensions"
-    echo "  3) List extensions"
-    echo "  4) Install an extension"
-    echo "  5) Remove an extension"
-    echo "  6) Status"
-    echo "  7) Uninstall theme"
-    echo "  0) Exit"
+    clear 2>/dev/null || true; banner
+    echo "  THEME"
+    echo "    1) Install / Reinstall Shadow Theme"
+    echo "    2) Update theme + extensions"
+    echo "    7) Uninstall theme"
+    echo
+    echo "  EXTENSIONS"
+    echo "    3) List extensions"
+    echo "    4) Install an extension"
+    echo "    5) Remove an extension"
+    echo
+    echo "  SERVER"
+    echo "    8) Install Pterodactyl Panel"
+    echo "    9) Install Wings (node daemon)"
+    echo "   10) Connect Cloudflare (tunnel)"
+    echo
+    echo "  INFO"
+    echo "    6) Status"
+    echo
+    echo "    0) Exit"
     echo
     ask c "  Choose: " || exit 0
     case "$c" in
       1) ( cmd_install );;
       2) ( cmd_update );;
       3) ( cmd_ext list );;
-      4) ask n "  Extension name: " || exit 0; ( cmd_ext install "$n" );;
-      5) ask n "  Extension name: " || exit 0; ( cmd_ext remove "$n" );;
+      4) ( pick_ext && cmd_ext install "$EXT" );;
+      5) ( pick_installed_ext && cmd_ext remove "$EXT" );;
       6) ( cmd_status );;
       7) ( cmd_uninstall );;
+      8) ( cmd_panel );;
+      9) ( cmd_wings );;
+      10) ( cmd_cloudflare );;
       0) exit 0;;
       *) echo "  Invalid choice";;
     esac
@@ -213,8 +342,9 @@ main(){
   case "${1:-menu}" in
     menu) cmd_menu;;
     install) cmd_install;; update) cmd_update;; ext) shift; cmd_ext "$@";;
+    panel) cmd_panel;; wings) cmd_wings;; cloudflare) cmd_cloudflare;;
     uninstall) cmd_uninstall;; status) cmd_status;;
-    *) echo "Usage: sarthak34 [menu|install|update|status|uninstall|ext list|ext install <name>|ext remove <name>]";;
+    *) echo "Usage: sarthak34 [menu|install|update|status|uninstall|panel|wings|cloudflare|ext list|ext install <name>|ext remove <name>]";;
   esac
 }
 [ "${S34_LIB:-}" = 1 ] || main "$@"

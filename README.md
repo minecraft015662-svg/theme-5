@@ -18,5 +18,10 @@ Add a free UptimeRobot HTTP monitor (5 min) so Render does not sleep. Accept 401
 ## Use
 - Open PUBLIC_URL, log in (user `admin`, your ADMIN_PASS), create/revoke licenses.
 - Customer (on the panel server): curl -sSL https://YOUR-LINK/install.sh | sudo bash
-- Afterwards just run `sarthak34` for the menu, or: sarthak34 update | status | uninstall | ext list|install|remove <name>
+- Afterwards just run `sarthak34` for the menu. The menu is sectioned (THEME / EXTENSIONS / SERVER / INFO).
+  Extensions are picked **by number from a list** (names + descriptions shown) - no typing names.
+- CLI: sarthak34 update | status | uninstall | panel | wings | cloudflare | ext list|install|remove <name>
+  - `panel`  = run the official Pterodactyl panel installer, then apply Shadow Theme
+  - `wings`  = run the official Wings (node daemon) installer
+  - `cloudflare` = install cloudflared + create an auto-named tunnel (`shadow-panel`) for your panel domain
 - Edit LINKS in quick-links/ext.js and TEXT in announcement-bar/ext.js before using them.
