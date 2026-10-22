@@ -158,7 +158,7 @@ cmd_install(){
   ask_license
   curl -fsSL "$RAW/install.sh" -o "$BIN" && chmod +x "$BIN"
   get_theme
-  for e in login-aurora accent-picker footer-brand theme-sync; do get_ext "$e"; done
+  for e in login-aurora accent-picker footer-brand theme-sync theme-overhaul; do get_ext "$e"; done
   rebuild
   echo "Shadow Theme installed. Hard refresh your browser (Ctrl+Shift+R)."
   echo "Extensions: sarthak34 ext list | sarthak34 ext install <name>"

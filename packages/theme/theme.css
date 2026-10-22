@@ -1,121 +1,159 @@
-/* Shadow Theme by Sarthak34 (Midnight Aurora)
-   Palette: Ink #0d1020 | Slate #151a33 | Edge #2a3160 | Violet #8f7bff | Rose #ff7eb6 */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Shadow Theme v2 — "Nebula" overhaul by Sarthak34
+   A full visual replacement, not a recolour: cosmic background, floating glass
+   navigation, gradient-border cards, bold gradient controls. Stock Pterodactyl
+   chrome (copyright, plain grey boxes, default nav) is restyled or hidden.
+   Palette is live-editable via the Shadow Editor (--ma-violet / --ma-rose). */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --ma-ink: #0d1020;
-  --ma-slate: #151a33;
-  --ma-slate-2: #1b2142;
-  --ma-edge: rgba(143, 123, 255, .18);
+  --ma-ink: #070912;
+  --ma-slate: rgba(21, 26, 51, .72);
+  --ma-edge: rgba(143, 123, 255, .22);
   --ma-violet: #8f7bff;
   --ma-rose: #ff7eb6;
-  --ma-text: #e8eaff;
+  --ma-text: #eef0ff;
   --ma-muted: #9aa1c9;
 }
 
-html, body {
-  font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif !important;
-  color: var(--ma-text);
-}
+* { box-sizing: border-box; }
+html, body { font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif !important; color: var(--ma-text); }
+h1, h2, h3, h4, [class*="Title"], [class*="Heading"] { font-family: 'Space Grotesk', 'Manrope', sans-serif !important; letter-spacing: .2px; }
 
+/* ---------- cosmic background ---------- */
 body {
-  background-color: var(--ma-ink) !important;
+  background-color: #070912 !important;
   background-image:
-    radial-gradient(900px 520px at 8% -8%, rgba(143, 123, 255, .22), transparent 60%),
-    radial-gradient(700px 480px at 100% 0%, rgba(255, 126, 182, .12), transparent 55%);
+    radial-gradient(1200px 720px at 12% -14%, color-mix(in srgb, var(--ma-violet) 32%, transparent), transparent 58%),
+    radial-gradient(900px 620px at 106% -6%, rgba(255, 126, 182, .16), transparent 52%),
+    radial-gradient(1200px 900px at 50% 128%, rgba(64, 92, 255, .20), transparent 60%),
+    linear-gradient(180deg, #070912, #0a0d1e 55%, #070912) !important;
   background-attachment: fixed;
 }
-
 ::selection { background: rgba(143, 123, 255, .45); color: #fff; }
-
-/* scrollbar */
 * { scrollbar-width: thin; scrollbar-color: #2a3160 transparent; }
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: #2a3160; border-radius: 8px; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #2a3160; border-radius: 9px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--ma-violet); }
 
-/* top navigation: frosted glass - the one loud element */
+/* ---------- floating glass top navigation ---------- */
 #NavigationBar {
-  background: rgba(21, 26, 51, .62) !important;
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border-bottom: 1px solid var(--ma-edge);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, .35);
-}
-#NavigationBar a:hover, #NavigationBar a.active {
-  color: #fff !important;
-  box-shadow: inset 0 -2px 0 var(--ma-violet) !important;
-}
-
-/* sub navigation on server pages */
-#SubNavigation, [class*="SubNavigation"] {
-  background: rgba(21, 26, 51, .55) !important;
+  background: rgba(14, 18, 38, .55) !important;
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
   border-bottom: 1px solid var(--ma-edge) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .45), inset 0 -1px 0 rgba(255, 255, 255, .03);
+}
+#NavigationBar a {
+  border-radius: 10px;
+  transition: background .16s ease, color .16s ease, box-shadow .16s ease;
+  font-weight: 600;
+}
+#NavigationBar a:hover { background: rgba(143, 123, 255, .14) !important; color: #fff !important; }
+#NavigationBar a.active, #NavigationBar a[aria-current="page"] {
+  color: #fff !important;
+  box-shadow: inset 0 -2px 0 var(--ma-violet), 0 6px 18px color-mix(in srgb, var(--ma-violet) 30%, transparent) !important;
+}
+#NavigationBar img { max-height: 34px; }
+
+/* sub navigation */
+#SubNavigation, [class*="SubNavigation"] {
+  background: rgba(14, 18, 38, .5) !important;
+  border-bottom: 1px solid var(--ma-edge) !important;
+  backdrop-filter: blur(10px);
 }
 
-/* cards / boxes: styled-components names contain the component name */
-[class*="GreyRowBox"], [class*="TitledGreyBox"], [class*="ServerRow"], [class*="ContentBox"] {
-  background: rgba(27, 33, 66, .72) !important;
-  border: 1px solid var(--ma-edge) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .28);
+/* ---------- cards: gradient border + glass, the signature look ---------- */
+[class*="GreyRowBox"], [class*="TitledGreyBox"], [class*="ContentBox"], [class*="ServerRow"], [class*="InfoBox"] {
+  border: 1px solid transparent !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(rgba(20, 25, 48, .78), rgba(16, 20, 40, .78)) padding-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--ma-violet) 60%, transparent), rgba(255, 126, 182, .35), rgba(64, 92, 255, .25)) border-box !important;
+  backdrop-filter: blur(12px) saturate(130%);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .38);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
-[class*="GreyRowBox"]:hover { border-color: rgba(143, 123, 255, .55) !important; }
+[class*="GreyRowBox"]:hover, [class*="ServerRow"]:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 55px color-mix(in srgb, var(--ma-violet) 26%, rgba(0, 0, 0, .45));
+}
+/* left accent bar on server rows */
+[class*="ServerRow"], [class*="GreyRowBox"] { position: relative; overflow: hidden; }
+[class*="ServerRow"]::before, [class*="GreyRowBox"]::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, var(--ma-violet), var(--ma-rose)); opacity: .0;
+  transition: opacity .18s ease;
+}
+[class*="ServerRow"]:hover::before, [class*="GreyRowBox"]:hover::before { opacity: .9; }
 
-/* inputs */
+/* headings inside cards */
+[class*="TitledGreyBox"] > h2, [class*="TitledGreyBox"] > div > h2, h2 { color: #fff; }
+
+/* ---------- inputs ---------- */
 input, textarea, select {
-  background: #10142a !important;
-  border: 1px solid #2a3160 !important;
+  background: #0d1124 !important;
+  border: 1px solid #262c56 !important;
   color: var(--ma-text) !important;
-  border-radius: 8px !important;
+  border-radius: 11px !important;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 input:focus, textarea:focus, select:focus {
   border-color: var(--ma-violet) !important;
-  box-shadow: 0 0 0 3px rgba(143, 123, 255, .25) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ma-violet) 25%, transparent) !important;
   outline: none !important;
 }
 ::placeholder { color: #6a719e !important; }
 
-/* buttons */
-button[type="submit"], [class*="Button___Styled"] {
-  border-radius: 8px !important;
-  transition: filter .15s ease, box-shadow .15s ease;
+/* ---------- bold gradient buttons ---------- */
+button[type="submit"], [class*="Button___Styled"], button[type="button"] {
+  background-image: linear-gradient(135deg, var(--ma-violet), #6a8bff) !important;
+  border: 0 !important;
+  color: #0b0d1c !important;
+  font-weight: 800 !important;
+  border-radius: 11px !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--ma-violet) 40%, transparent);
+  transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
 }
-button[type="submit"]:hover { filter: brightness(1.1); box-shadow: 0 6px 20px rgba(143, 123, 255, .35); }
-
-/* console + file editor use a mono face */
-.xterm, .xterm * , .cm-editor, .CodeMirror, code, pre, kbd {
-  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace !important;
+button[type="submit"]:hover, [class*="Button___Styled"]:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--ma-violet) 55%, transparent);
 }
-.xterm-viewport { background-color: #090b18 !important; }
-[class*="Terminal"] { border-radius: 12px; border: 1px solid var(--ma-edge); }
 
-/* tables */
+/* ---------- console ---------- */
+.xterm, .xterm *, .cm-editor, .CodeMirror, code, pre, kbd { font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace !important; }
+.xterm-viewport { background-color: #05070f !important; border-radius: 12px; }
+[class*="Terminal"] {
+  border-radius: 14px;
+  border: 1px solid var(--ma-edge) !important;
+  box-shadow: 0 0 0 1px rgba(143, 123, 255, .2), 0 0 46px rgba(143, 123, 255, .16);
+}
+
+/* ---------- tables ---------- */
 table { border-collapse: separate; border-spacing: 0; }
 tr:hover td { background: rgba(143, 123, 255, .06); }
 
-/* login / auth pages */
+/* ---------- login / auth ---------- */
 form[class*="LoginFormContainer"], [class*="LoginFormContainer"] {
-  background: rgba(21, 26, 51, .7) !important;
+  background: rgba(18, 22, 44, .72) !important;
+  border: 1px solid var(--ma-edge) !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
+}
+
+/* ---------- modals / tooltips ---------- */
+[class*="Tooltip"], [role="dialog"], [class*="Modal"] {
+  background: #12162e !important;
   border: 1px solid var(--ma-edge) !important;
   border-radius: 16px !important;
-  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+}
+
+/* ---------- hide stock Pterodactyl chrome ---------- */
+[class*="copyright" i], [class*="Copyright"], footer [class*="Text"], .text-neutral-500.text-xs {
+  opacity: .0 !important; height: 0 !important; overflow: hidden !important;
 }
 
 a:focus-visible, button:focus-visible { outline: 2px solid var(--ma-rose); outline-offset: 2px; }
-
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
-
-/* ===== Sarthak34 Nebula edition (original styling) ===== */
-body{background-image:
-  radial-gradient(1000px 600px at 12% -10%,color-mix(in srgb,var(--ma-violet) 30%,transparent),transparent 60%),
-  radial-gradient(800px 520px at 100% 0%,rgba(255,126,182,.14),transparent 55%),
-  radial-gradient(900px 600px at 50% 120%,rgba(70,90,255,.14),transparent 60%) !important}
-#NavigationBar{border-radius:0 0 18px 18px}
-#NavigationBar a{border-radius:10px;transition:background .15s}
-#NavigationBar a:hover{background:rgba(143,123,255,.12) !important}
-[class*="GreyRowBox"],[class*="TitledGreyBox"],[class*="ContentBox"]{border-radius:16px !important;backdrop-filter:blur(10px)}
-[class*="GreyRowBox"]:hover{transform:translateY(-1px);box-shadow:0 14px 34px rgba(143,123,255,.18)}
-[class*="Button___Styled"],button[type="submit"]{background-image:linear-gradient(135deg,var(--ma-violet),#6a8bff) !important;border:0 !important;color:#0d1020 !important;font-weight:700}
-[class*="Button___Styled"]:hover{box-shadow:0 8px 24px color-mix(in srgb,var(--ma-violet) 45%,transparent)}
-[class*="Tooltip"],[role="dialog"],[class*="Modal"]{background:#151a33 !important;border:1px solid var(--ma-edge);border-radius:16px}

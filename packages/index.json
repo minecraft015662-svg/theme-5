@@ -5,5 +5,6 @@
  {"name":"accent-picker","description":"Users pick their own accent colour","files":["ext.css","ext.js"]},
  {"name":"quick-links","description":"Side dock with Discord, billing and support links","files":["ext.css","ext.js"]},
  {"name":"login-aurora","description":"Animated aurora background on the login page","files":["ext.css"]},
- {"name":"theme-sync","description":"Live-applies your Shadow Editor settings (logo, Discord, colours, announcement)","files":["ext.js"]}
+ {"name":"theme-sync","description":"Live-applies your Shadow Editor settings (logo, Discord, colours, announcement)","files":["ext.js"]},
+ {"name":"theme-overhaul","description":"Hides leftover Pterodactyl branding for a fully custom look","files":["ext.js"]}
 ]}
