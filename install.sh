@@ -6,6 +6,7 @@ PANEL="${PANEL_DIR:-/var/www/pterodactyl}"
 CONF=/etc/sarthak34/license.conf
 SERVER_FILE=/etc/sarthak34/server.url
 WRAP="$PANEL/resources/views/templates/wrapper.blade.php"
+ADMIN_WRAP="$PANEL/resources/views/layouts/admin.blade.php"
 TDIR="$PANEL/public/themes/sarthak34"
 BIN=/usr/local/bin/sarthak34
 die(){ echo "Error: $*" >&2; exit 1; }
@@ -123,6 +124,19 @@ s = re.sub(r"\n?<!-- sarthak34:start -->.*?<!-- sarthak34:end -->\n?", "\n", s, 
 if tags: s = s.replace("</head>", "<!-- sarthak34:start -->\n" + "\n".join(tags) + "\n<!-- sarthak34:end -->\n</head>", 1)
 open(wrap, "w").write(s)
 PY
+  if [ -f "$ADMIN_WRAP" ]; then
+    [ -f "$ADMIN_WRAP.s34bak" ] || cp "$ADMIN_WRAP" "$ADMIN_WRAP.s34bak"
+    python3 - "$ADMIN_WRAP" "$TDIR" <<'PY'
+import os, re, sys, time
+wrap, tdir = sys.argv[1], sys.argv[2]; v = int(time.time()); tags = []
+if os.path.exists(f"{tdir}/theme.css"): tags.append(f'<link rel="stylesheet" href="/themes/sarthak34/theme.css?v={v}">')
+if os.path.exists(f"{tdir}/admin.css"): tags.append(f'<link rel="stylesheet" href="/themes/sarthak34/admin.css?v={v}">')
+s = open(wrap).read()
+s = re.sub(r"\n?<!-- sarthak34:start -->.*?<!-- sarthak34:end -->\n?", "\n", s, flags=re.S)
+if tags: s = s.replace("</head>", "<!-- sarthak34:start -->\n" + "\n".join(tags) + "\n<!-- sarthak34:end -->\n</head>", 1)
+open(wrap, "w").write(s)
+PY
+  fi
   (cd "$PANEL" && php artisan view:clear >/dev/null 2>&1)
 }
 
@@ -144,7 +158,7 @@ need_license(){
 }
 valid_name(){ [[ "$1" =~ ^[A-Za-z0-9._-]+$ ]]; }
 
-get_theme(){ mkdir -p "$TDIR"; dl packages/theme/theme.css "$TDIR/theme.css" || die "could not download the theme from $RAW"; printf 'window.__S34_SERVER="%s";\n' "${RAW//\"/}" > "$TDIR/server.js"; }
+get_theme(){ mkdir -p "$TDIR"; dl packages/theme/theme.css "$TDIR/theme.css" || die "could not download the theme from $RAW"; dl packages/theme/admin.css "$TDIR/admin.css" || true; printf 'window.__S34_SERVER="%s";\n' "${RAW//\"/}" > "$TDIR/server.js"; }
 get_ext(){
   valid_name "$1" || die "bad extension name"
   local files f; files=$(curl -fsSL "$RAW/packages/index.json" | python3 -c 'import json,sys;n=sys.argv[1];[print(f) for e in json.load(sys.stdin)["extensions"] if e["name"]==n for f in e["files"]]' "$1") || die "cannot read extension list"

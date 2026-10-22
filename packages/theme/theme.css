@@ -144,6 +144,20 @@ form[class*="LoginFormContainer"], [class*="LoginFormContainer"] {
 }
 [class*="LoginFormContainer"] h1, [class*="LoginFormContainer"] h2 { color: #fff; }
 [class*="LoginFormContainer"] img { max-height: 64px; margin: 0 auto 14px; display: block; }
+/* keep autofill from flashing yellow on the dark theme */
+input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ma-text) !important;
+  -webkit-box-shadow: 0 0 0 1000px #0d1124 inset !important;
+  box-shadow: 0 0 0 1000px #0d1124 inset !important;
+  caret-color: var(--ma-text) !important;
+  transition: background-color 99999s ease-out !important;
+}
+/* login submit button: force the gradient regardless of Pterodactyl's button style */
+[class*="LoginFormContainer"] button, [class*="LoginFormContainer"] button[type="submit"] {
+  background-image: linear-gradient(135deg, var(--ma-violet), #6a8bff) !important;
+  background-color: transparent !important;
+  border: 0 !important; color: #0b0d1c !important; font-weight: 800 !important; border-radius: 11px !important;
+}
 
 /* ---------- custom background image (set from the Geek Editor) ---------- */
 body::before {

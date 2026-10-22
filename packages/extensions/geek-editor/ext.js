@@ -33,19 +33,12 @@
       var img = nav.querySelector('img');
       if (img) { if (img.getAttribute('src') !== c.logo) img.src = c.logo; img.style.height = '30px'; img.style.width = 'auto'; }
     }
-    // name
-    if (c.serverName) {
-      if (document.title !== c.serverName) document.title = c.serverName;
-      var brand = nav && nav.querySelector('a[href="/"], .navbar-brand a, a.brand');
-      if (brand && !brand.querySelector('img') && brand.textContent !== c.serverName) brand.textContent = c.serverName;
-    }
-    // discord
-    if (c.discordName || c.discordLink) {
-      var as = document.querySelectorAll('a[href*="discord" i]');
-      for (var i = 0; i < as.length; i++) {
-        if (c.discordName && as[i].textContent !== c.discordName) as[i].textContent = c.discordName;
-        if (c.discordLink) as[i].setAttribute('href', c.discordLink);
-      }
+    // name — document.title only; never rewrite React's brand text node
+    if (c.serverName && document.title !== c.serverName) document.title = c.serverName;
+    // discord invite link — a safe attribute change; do NOT rewrite the link text
+    if (c.discordLink) {
+      var as = document.querySelectorAll('a[href*="discord"]');
+      for (var i = 0; i < as.length; i++) if (as[i].getAttribute('href') !== c.discordLink) as[i].setAttribute('href', c.discordLink);
     }
     // announcement bar
     var bar = document.querySelector('.geek-announce');
@@ -212,14 +205,9 @@
         }
       }
     } catch (e) {}
-    // re-apply on SPA re-renders (throttled) so the look survives route changes
-    var pending = false;
-    try {
-      new MutationObserver(function () {
-        if (pending) return; pending = true;
-        setTimeout(function () { pending = false; apply(cfg); }, 300);
-      }).observe(document.body, { childList: true, subtree: true });
-    } catch (e) {}
+    // re-assert on a timer (NOT an observer — observers re-mutating React's DOM
+    // can desync React and blank the panel)
+    setInterval(function () { apply(cfg); }, 15000);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();

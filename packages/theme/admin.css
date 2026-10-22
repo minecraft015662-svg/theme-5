@@ -1,0 +1,70 @@
+/* Shadow Theme — ADMIN area.
+   Pterodactyl's admin is a server-rendered Bootstrap/AdminLTE Blade layout
+   (layouts/admin.blade.php), completely separate from the user React app.
+   This file is injected into that layout and targets stable AdminLTE classes. */
+
+body, .wrapper, .content-wrapper, .main-body { background: #070912 !important; color: #eef0ff !important; }
+body {
+  background-image:
+    radial-gradient(1200px 700px at 12% -14%, rgba(143, 123, 255, .26), transparent 58%),
+    radial-gradient(900px 600px at 106% -6%, rgba(255, 126, 182, .13), transparent 52%),
+    radial-gradient(1200px 900px at 50% 128%, rgba(64, 92, 255, .18), transparent 60%) !important;
+  background-attachment: fixed;
+}
+
+/* top bar */
+.main-header .navbar, .main-header .navbar-custom { background: rgba(14, 18, 38, .72) !important; border-color: rgba(143, 123, 255, .2) !important; }
+.main-header .nav-link, .main-header .brand-link, .navbar-brand { color: #eef0ff !important; }
+.brand-link { background: transparent !important; border-bottom: 1px solid rgba(143, 123, 255, .18) !important; }
+
+/* sidebar */
+.main-sidebar, .aside-menu { background: rgba(12, 15, 30, .94) !important; border-right: 1px solid rgba(143, 123, 255, .18) !important; }
+.sidebar { color: #cdd2f5 !important; }
+.sidebar a, .sidebar .nav-link { color: #b9c0ea !important; }
+.sidebar .nav-header { color: #8f97c8 !important; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; }
+.sidebar .nav-item:hover > .nav-link, .sidebar-menu > li.active > a, .sidebar a.active, .sidebar .nav-link.active {
+  background: rgba(143, 123, 255, .16) !important; color: #fff !important; border-radius: 10px; }
+
+/* content */
+.content-wrapper, .right-side { background: transparent !important; }
+.content { color: #eef0ff !important; }
+h1, h2, h3, h4, h5, .main-header .page-title, .card-title, .box-title { color: #fff !important; }
+.text-muted, .text-sm, .description-text, .text-secondary { color: #9aa1c9 !important; }
+
+/* cards / boxes: glass + violet border */
+.box, .card, .callout {
+  background: rgba(20, 25, 48, .72) !important;
+  border: 1px solid rgba(143, 123, 255, .2) !important;
+  border-radius: 14px !important; color: #eef0ff !important; }
+.box-header .box-title, .card-header, .card-title, .card-header h3 { color: #fff !important; }
+.callout-primary { background: rgba(143, 123, 255, .1) !important; }
+
+/* forms */
+input, select, textarea, .form-control, .custom-select {
+  background: #0d1124 !important; border-color: #262c56 !important; color: #eef0ff !important; }
+.form-control:focus, .form-control:focus-visible {
+  border-color: #8f7bff !important; box-shadow: 0 0 0 3px rgba(143, 123, 255, .25) !important; }
+
+/* tables */
+.table { color: #eef0ff !important; }
+.table td, .table th, .table-bordered td, .table-bordered th { border-color: rgba(143, 123, 255, .15) !important; }
+.table-striped > tbody > tr:nth-of-type(odd) { background: rgba(143, 123, 255, .05) !important; }
+.table-hover > tbody > tr:hover { background: rgba(143, 123, 255, .08) !important; }
+
+/* buttons — themed, keeping colour meaning readable */
+.btn { border-radius: 9px !important; font-weight: 700; }
+.btn-primary, .btn-default, .btn-secondary {
+  background: linear-gradient(135deg, #8f7bff, #6a8bff) !important; border: 0 !important; color: #0b0d1c !important; }
+.btn-warning { background: #ffb547 !important; color: #241a05 !important; border: 0 !important; }
+.btn-danger { background: #ff5f6d !important; color: #2a0a0d !important; border: 0 !important; }
+.btn-success { background: #39d98a !important; color: #05261a !important; border: 0 !important; }
+.btn-info { background: #4aa8ff !important; color: #041a2e !important; border: 0 !important; }
+
+/* badges + progress */
+.badge-primary { background: #8f7bff !important; color: #0b0d1c !important; }
+.progress-bar { background: linear-gradient(90deg, #8f7bff, #6a8bff) !important; }
+
+/* footer */
+.main-footer { background: transparent !important; color: #9aa1c9 !important; border-top: 1px solid rgba(143, 123, 255, .15) !important; }
+/* hide the stock Pterodactyl copyright + version tag */
+.main-footer strong, .main-footer .float-right { display: none !important; }
