@@ -6,5 +6,6 @@
  {"name":"quick-links","description":"Side dock with Discord, billing and support links","files":["ext.css","ext.js"]},
  {"name":"login-aurora","description":"Animated aurora background on the login page","files":["ext.css"]},
  {"name":"theme-sync","description":"Live-applies your Shadow Editor settings (logo, Discord, colours, announcement)","files":["ext.js"]},
- {"name":"theme-overhaul","description":"Hides leftover Pterodactyl branding for a fully custom look","files":["ext.js"]}
+ {"name":"theme-overhaul","description":"Hides leftover Pterodactyl branding for a fully custom look","files":["ext.js"]},
+ {"name":"geek-editor","description":"In-panel editor: set background link, colours, logo, name and Discord (Arix-style)","files":["ext.js","ext.css"]}
 ]}

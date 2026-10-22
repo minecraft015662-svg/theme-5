@@ -134,12 +134,22 @@ table { border-collapse: separate; border-spacing: 0; }
 tr:hover td { background: rgba(143, 123, 255, .06); }
 
 /* ---------- login / auth ---------- */
+[class*="AuthenticationContainer"], [class*="LoginContainer"] { background: transparent !important; }
 form[class*="LoginFormContainer"], [class*="LoginFormContainer"] {
   background: rgba(18, 22, 44, .72) !important;
   border: 1px solid var(--ma-edge) !important;
   border-radius: 20px !important;
   backdrop-filter: blur(18px) saturate(140%);
   box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
+}
+[class*="LoginFormContainer"] h1, [class*="LoginFormContainer"] h2 { color: #fff; }
+[class*="LoginFormContainer"] img { max-height: 64px; margin: 0 auto 14px; display: block; }
+
+/* ---------- custom background image (set from the Geek Editor) ---------- */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(rgba(7, 9, 18, .55), rgba(7, 9, 18, .72)), var(--ma-bg-url, none);
+  background-size: cover; background-position: center; background-repeat: no-repeat;
 }
 
 /* ---------- modals / tooltips ---------- */
